@@ -316,6 +316,27 @@ class YouTubeIt
       client.new_subscription_videos(user_id)
     end
 
+    def channels_by(params, options={})
+      request_params = params.respond_to?(:to_hash) ? params : options
+      request_params[:page] = integer_or_default(request_params[:page], 1)
+
+      request_params[:dev_key] = @dev_key if @dev_key
+
+      unless request_params[:max_results]
+        request_params[:max_results] = integer_or_default(request_params[:per_page], 25)
+      end
+
+      unless request_params[:offset]
+        request_params[:offset] = calculate_offset(request_params[:page], request_params[:max_results])
+      end
+
+      request = YouTubeIt::Request::ChannelSearch.new(request_params)
+
+      logger.debug "Submitting request [url=#{request.url}]." if @legacy_debug_flag
+      parser = YouTubeIt::Parser::ChannelSearchParser.new(request.url)
+      parser.parse
+    end
+
     private
 
     def client

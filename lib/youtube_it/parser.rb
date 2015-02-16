@@ -345,6 +345,37 @@ class YouTubeIt
         end.reduce({},:merge)
       end
     end
+
+
+    class ChannelParser < FeedParser #:nodoc:
+      def parse_content(content)
+        xml = Nokogiri::XML(content)
+        entry = xml.at("entry") || xml.at("feed")
+        parse_entry(entry)
+      end
+      def parse_entry(entry)
+        YouTubeIt::Model::Channel.new(
+            :channel_id => entry.at_xpath("yt:channelId") ? entry.at_xpath("yt:channelId").text : nil,
+            :uri        => (entry.at_xpath('xmlns:link[@rel="alternate"]')['href'] rescue nil),
+            :updated    => entry.at("updated") ? entry.at("updated").text : nil,
+            :title      => entry.at("title") ? entry.at("title").text : nil,
+            :summary    => entry.at("summary") ? entry.at("summary").text : nil,
+            :followers  => entry.at_xpath("yt:channelStatistics")["subscriberCount"],
+            :views      => entry.at_xpath("yt:channelStatistics")["viewCount"],
+            :avatar     => entry.at_xpath("media:thumbnail") ? entry.at_xpath("media:thumbnail")["url"] : nil
+        )
+      end
+    end
+
+    class ChannelSearchParser < ChannelParser
+      def parse_content(content)
+        Nokogiri::XML(content).xpath("//xmlns:entry").map do |entry|
+          entry.namespaces.each {|name, url| entry.document.root.add_namespace name, url }
+          parse_entry(entry)
+        end
+      end
+    end
+
     
     class SubscriptionFeedParser < FeedParser #:nodoc:
 

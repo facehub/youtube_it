@@ -57,6 +57,7 @@ end
   parser
   model/author
   model/category
+  model/channel
   model/comment
   model/contact
   model/content
@@ -70,6 +71,7 @@ end
   model/video
   model/activity
   request/base_search
+  request/channel_search
   request/error
   request/user_search
   request/standard_search
